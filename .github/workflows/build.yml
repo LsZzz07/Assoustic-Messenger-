@@ -10,7 +10,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "17"
@@ -23,7 +23,15 @@ jobs:
       - name: Install buildozer
         run: pip install --upgrade pip buildozer cython==0.29.36 setuptools
       - name: Build APK
-        run: buildozer android debug
+        shell: bash
+        run: buildozer android debug 2>&1 | tee build.log
+      - name: Show the error
+        if: failure()
+        run: |
+          echo "=== LAST 40 LINES ==="
+          tail -n 40 build.log
+          echo "=== ERROR LINES ==="
+          grep -n -i -E "error|traceback|failed|not found" build.log | tail -n 25
       - uses: actions/upload-artifact@v4
         with:
           name: AcousticMessenger-apk
